@@ -53,6 +53,16 @@ location @post_action {
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
             proxy_redirect off;
+            uwsgi_pass      unix:app.sock;
+            
+            post_action @post_action; 
+            
+        }
+        
+        location @post_action {
+
+        proxy_pass      http://api2.honeyqa.io; # traffic mirroring 
+        
         }
  
         #error_page  404              /404.html;
