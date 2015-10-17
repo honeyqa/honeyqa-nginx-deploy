@@ -8,6 +8,7 @@ Nginx의 `revese-proxy`기능과 `post_action` feature를 응용하여 UrQA HAPr
 * UrQA의 Traffic을 HoneyQA로 `traffic mirroring`을 구현한다.
 * 직접적으로 HAProxy server에 접근하지 않게 되고 nginx를 proxy로 경유하므로 `보안`의 효과가 있다.
 * 부하 분산 효과
+* Static File을 NginX에 위임할 경우 보다 괜찮은 성능을 보여준다.
 
 ### 3. What is reverse-proxy?
 
@@ -30,4 +31,51 @@ location @post_action {
 
 ### 5. Configurations
 
+```{.no-highlight}
+ # reverse proxy
+        server {
+        listen       80;
+        server_name  UrQA.io www.UrQA.io;
+ 
+        #charset
+ 
+        #access_log  logs/host.access.log  main;
+        log_not_found off;
+ 
+        client_max_body_size    30m;
+        large_client_header_buffers 4 16k;
+ 
+        location / {
+            proxy_pass  http://urqa.io;
+            proxy_set_header Accept-Encoding   "";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_redirect off;
+        }
+ 
+        #error_page  404              /404.html;
+ 
+        # redirect server error pages to the static page /50x.html
+        #
+        #error_page   500 502 503 504  /50x.html;
+        #location = /50x.html {
+        #    root   html;
+        #}
+ 
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        location ~ /\.ht {
+            deny  all;
+        }
+    }
+```
+
 ### 6. Deploy
+```{.no-highlight}
+git clone https://github.com/honeyqa/nginx-deploy.git
+nginx -t
+sudo service nginx start
+```
